@@ -12,6 +12,7 @@ import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import Contact from './pages/Contact';
 import Account from './pages/Account';
+import CategoryProducts from './pages/CategoryProducts';
 
 const Placeholder = ({ title }) => (
   <div className="min-h-[50vh] flex items-center justify-center">
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/account" element={<Account />} />
+                <Route path="/category/:categorySlug/:subSlug" element={<CategoryProducts />} />
                 <Route path="/wishlist" element={<Placeholder title="Wishlist" />} />
                 <Route path="/about" element={<Placeholder title="About" />} />
               </Routes>

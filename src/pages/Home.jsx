@@ -1,8 +1,94 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, Truck, ShieldCheck, Headphones } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, ArrowLeft, Truck, ShieldCheck, Headphones, ChevronRight, ChevronDown } from 'lucide-react';
 import { fetchAllProducts } from '../services/api';
 import ProductCard from '../components/ProductCard';
+
+/* ─── Category Data ─── */
+const CATEGORIES = [
+  {
+    name: "Woman's Fashion",
+    subs: ["Dresses", "Tops & Blouses", "Jeans & Pants", "Skirts", "Outerwear", "Swimwear", "Lingerie", "Shoes & Heels", "Bags & Purses", "Accessories"],
+  },
+  {
+    name: "Men's Fashion",
+    subs: ["T-Shirts & Shirts", "Jeans & Trousers", "Suits & Blazers", "Sportswear", "Outerwear", "Underwear", "Shoes", "Watches", "Bags", "Accessories"],
+  },
+  {
+    name: "Electronics",
+    subs: ["Smartphones", "Laptops", "Tablets", "Cameras", "Headphones", "Speakers", "Smart Watches", "Gaming", "Accessories", "TVs"],
+  },
+  {
+    name: "Home & Lifestyle",
+    subs: ["Furniture", "Kitchen", "Bedding", "Lighting", "Decor", "Garden", "Storage", "Cleaning", "Bath", "Candles"],
+  },
+  {
+    name: "Medicine",
+    subs: ["Vitamins", "Pain Relief", "First Aid", "Cold & Flu", "Digestive", "Skincare Meds", "Eye Care", "Baby Health", "Fitness Supplements", "Dental"],
+  },
+  {
+    name: "Sports & Outdoor",
+    subs: ["Gym Equipment", "Running", "Cycling", "Swimming", "Camping", "Hiking", "Team Sports", "Yoga & Pilates", "Water Sports", "Winter Sports"],
+  },
+  {
+    name: "Baby's & Toys",
+    subs: ["Baby Clothing", "Strollers", "Toys 0-2 yrs", "Toys 3-5 yrs", "Toys 6-12 yrs", "Board Games", "Educational", "Outdoor Play", "Baby Monitors", "Feeding"],
+  },
+  {
+    name: "Groceries & Pets",
+    subs: ["Fresh Produce", "Snacks", "Beverages", "Dairy", "Bakery", "Pet Food", "Pet Accessories", "Organic", "Frozen", "Condiments"],
+  },
+  {
+    name: "Health & Beauty",
+    subs: ["Skincare", "Haircare", "Makeup", "Fragrances", "Nail Care", "Oral Care", "Men's Grooming", "Sunscreen", "Body Care", "Tools & Devices"],
+  },
+];
+
+/* ─── Sidebar Category Item ─── */
+const SidebarCategory = ({ cat, isOpen, onToggle }) => {
+  return (
+    <div className="border-b border-gray-100 last:border-b-0">
+      <button
+        onClick={onToggle}
+        className="w-full flex justify-between items-center py-3 px-1 text-sm font-medium text-gray-800 hover:text-red-500 transition-colors group"
+      >
+        <span>{cat.name}</span>
+        <span className={`transition-transform duration-200 text-gray-400 group-hover:text-red-500 ${isOpen ? 'rotate-90' : ''}`}>
+          <ChevronRight size={14} />
+        </span>
+      </button>
+      <div
+        className="overflow-hidden transition-all duration-300 ease-in-out"
+        style={{ maxHeight: isOpen ? `${cat.subs.length * 36}px` : '0px' }}
+      >
+        <ul className="pb-2 pl-3">
+          {cat.subs.map((sub) => (
+            <SidebarSubItem key={sub} sub={sub} parentCategory={cat.name} />
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Sidebar Sub Item ─── */
+const SidebarSubItem = ({ sub, parentCategory }) => {
+  const navigate = useNavigate();
+  const slug = encodeURIComponent(parentCategory.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+  const subSlug = encodeURIComponent(sub.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+
+  return (
+    <li>
+      <button
+        onClick={() => navigate(`/category/${slug}/${subSlug}?name=${encodeURIComponent(parentCategory)}&sub=${encodeURIComponent(sub)}`)}
+        className="flex items-center gap-1.5 w-full text-left text-xs text-gray-600 hover:text-red-500 py-1.5 transition-colors group"
+      >
+        <span className="w-1 h-1 rounded-full bg-gray-300 group-hover:bg-red-400 flex-shrink-0 transition-colors" />
+        {sub}
+      </button>
+    </li>
+  );
+};
 
 /* ─── Section Label ─── */
 const SectionHeader = ({ subtitle, title }) => (
@@ -57,10 +143,15 @@ const CardSlider = ({ children, itemWidth = 280 }) => {
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openCategory, setOpenCategory] = useState(null);
 
   useEffect(() => {
     fetchAllProducts().then((p) => { setProducts(p); setLoading(false); });
   }, []);
+
+  const handleCategoryToggle = (catName) => {
+    setOpenCategory((prev) => (prev === catName ? null : catName));
+  };
 
   const SkeletonCard = () => (
     <div className="flex-shrink-0 w-[270px] h-80 bg-gray-100 animate-pulse rounded" />
@@ -73,12 +164,14 @@ const Home = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 mb-24">
         <div className="flex gap-8">
           {/* Sidebar */}
-          <div className="hidden lg:flex flex-col w-56 border-r border-gray-200 pr-6 gap-4 font-medium text-sm text-gray-800">
-            {['Woman\'s Fashion','Men\'s Fashion','Electronics','Home & Lifestyle','Medicine','Sports & Outdoor','Baby\'s & Toys','Groceries & Pets','Health & Beauty'].map((cat, i) => (
-              <div key={cat} className="flex justify-between items-center cursor-pointer hover:text-primary transition-colors">
-                <span>{cat}</span>
-                {i < 2 && <ArrowRight size={14} />}
-              </div>
+          <div className="hidden lg:flex flex-col w-60 border-r border-gray-200 pr-4 flex-shrink-0" style={{ maxHeight: '440px', overflowY: 'auto', scrollbarWidth: 'thin' }}>
+            {CATEGORIES.map((cat) => (
+              <SidebarCategory
+                key={cat.name}
+                cat={cat}
+                isOpen={openCategory === cat.name}
+                onToggle={() => handleCategoryToggle(cat.name)}
+              />
             ))}
           </div>
 
