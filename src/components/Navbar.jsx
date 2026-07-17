@@ -2,10 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Heart, ShoppingCart, User } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-
+import SignUp from '../pages/SignUp';
+import { useNavigate } from "react-router-dom";
 const Navbar = () => {
   const { cartCount } = useCart();
-
+ const navigate = useNavigate();
   return (
     <header className="w-full">
       {/* Top Banner */}
@@ -72,12 +73,17 @@ const Navbar = () => {
                   )}
                 </Link>
 
+                {/* ===============================================User icon for signup */}
+
                 <div className="relative group hidden sm:block">
-                  <button className="text-black hover:text-primary transition-colors flex items-center justify-center bg-transparent group-hover:bg-primary group-hover:text-white rounded-full p-1">
+                  <button
+                    onClick={() => navigate("/signup")}
+                    className="text-black hover:text-primary transition-colors flex items-center justify-center bg-transparent group-hover:bg-primary group-hover:text-white rounded-full p-1"
+                  >
                     <User size={24} />
                   </button>
-                  {/* Dropdown would go here */}
                 </div>
+                {/* ========================================= */}
               </div>
             </div>
 
