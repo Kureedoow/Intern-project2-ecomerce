@@ -13,7 +13,7 @@ import Login from './pages/Login';
 import Contact from './pages/Contact';
 import Account from './pages/Account';
 import CategoryProducts from './pages/CategoryProducts';
-
+import About from './pages/About';
 const Placeholder = ({ title }) => (
   <div className="min-h-[50vh] flex items-center justify-center">
     <h1 className="text-3xl font-bold">{title} Page Coming Soon!</h1>
@@ -39,7 +39,7 @@ function App() {
                 <Route path="/account" element={<Account />} />
                 <Route path="/category/:categorySlug/:subSlug" element={<CategoryProducts />} />
                 <Route path="/wishlist" element={<Placeholder title="Wishlist" />} />
-                <Route path="/about" element={<Placeholder title="About" />} />
+                <Route path="/About" element={<About/>} />
               </Routes>
             </main>
             <Footer />
