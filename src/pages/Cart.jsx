@@ -1,10 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { X } from 'lucide-react';
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const navigate = useNavigate();
 
   if (cartItems.length === 0) {
     return (
@@ -38,49 +39,61 @@ const Cart = () => {
 
         {/* Cart Items */}
         <div className="space-y-10 mb-10">
-          {cartItems.map((item) => (
-            <div key={item.id} className="relative flex flex-col md:grid md:grid-cols-4 gap-4 items-center bg-white shadow-[0_1px_10px_rgba(0,0,0,0.05)] rounded py-4 px-10">
-              
-              {/* Product */}
-              <div className="flex items-center gap-4 w-full md:w-auto relative">
-                <button 
-                  onClick={() => removeFromCart(item.id)}
-                  className="absolute -top-2 -left-6 md:-left-4 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors"
-                >
-                  <X size={14} />
-                </button>
-                <div className="w-14 h-14 bg-gray-50 flex-shrink-0 flex items-center justify-center p-1 rounded">
-                  <img src={item.image} alt={item.title} className="max-h-full max-w-full object-contain mix-blend-multiply" />
-                </div>
-                <span className="font-medium text-sm line-clamp-1 truncate w-40">{item.title}</span>
-              </div>
-
-              {/* Price */}
-              <div className="w-full flex justify-between md:block">
-                <span className="md:hidden font-medium text-gray-500">Price:</span>
-                <span>${Number(item.price).toFixed(2)}</span>
-              </div>
-
-              {/* Quantity */}
-              <div className="w-full flex justify-between md:block">
-                <span className="md:hidden font-medium text-gray-500">Quantity:</span>
-                <div className="inline-flex items-center border border-gray-300 rounded px-3 py-1">
-                  <span className="w-8 text-center">{item.quantity}</span>
-                  <div className="flex flex-col border-l border-gray-300 pl-2 ml-1">
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="text-gray-500 hover:text-black text-xs leading-none">▲</button>
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="text-gray-500 hover:text-black text-xs leading-none">▼</button>
+          {cartItems.map((item) => {
+            const itemKey = `${item.id}-${item.selectedSize || 'none'}-${item.selectedColor || 'none'}`;
+            return (
+              <div key={itemKey} className="relative flex flex-col md:grid md:grid-cols-4 gap-4 items-center bg-white shadow-[0_1px_10px_rgba(0,0,0,0.05)] rounded py-4 px-10">
+                
+                {/* Product */}
+                <div className="flex items-center gap-4 w-full md:w-auto relative">
+                  <button 
+                    onClick={() => removeFromCart(item.id, item.selectedSize, item.selectedColor)}
+                    className="absolute -top-2 -left-6 md:-left-4 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                  <div className="w-14 h-14 bg-gray-50 flex-shrink-0 flex items-center justify-center p-1 rounded">
+                    <img src={item.image} alt={item.title} className="max-h-full max-w-full object-contain mix-blend-multiply" />
+                  </div>
+                  <div>
+                    <span className="font-medium text-sm line-clamp-1 truncate w-40 block">{item.title}</span>
+                    {(item.selectedSize || item.selectedColor) && (
+                      <span className="text-xs text-gray-500 block mt-0.5">
+                        {item.selectedSize && `Size: ${item.selectedSize}`}
+                        {item.selectedSize && item.selectedColor && ' / '}
+                        {item.selectedColor && `Color: ${item.selectedColor}`}
+                      </span>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              {/* Subtotal */}
-              <div className="w-full flex justify-between md:block md:text-right">
-                <span className="md:hidden font-medium text-gray-500">Subtotal:</span>
-                <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
+                {/* Price */}
+                <div className="w-full flex justify-between md:block">
+                  <span className="md:hidden font-medium text-gray-500">Price:</span>
+                  <span>${Number(item.price).toFixed(2)}</span>
+                </div>
 
-            </div>
-          ))}
+                {/* Quantity */}
+                <div className="w-full flex justify-between md:block">
+                  <span className="md:hidden font-medium text-gray-500">Quantity:</span>
+                  <div className="inline-flex items-center border border-gray-300 rounded px-3 py-1">
+                    <span className="w-8 text-center">{item.quantity}</span>
+                    <div className="flex flex-col border-l border-gray-300 pl-2 ml-1">
+                      <button onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedSize, item.selectedColor)} className="text-gray-500 hover:text-black text-xs leading-none">▲</button>
+                      <button onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedSize, item.selectedColor)} className="text-gray-500 hover:text-black text-xs leading-none">▼</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Subtotal */}
+                <div className="w-full flex justify-between md:block md:text-right">
+                  <span className="md:hidden font-medium text-gray-500">Subtotal:</span>
+                  <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+
+              </div>
+            );
+          })}
         </div>
 
         {/* Buttons */}
@@ -128,7 +141,10 @@ const Cart = () => {
             </div>
             
             <div className="flex justify-center">
-              <button className="bg-primary text-white px-10 py-3 rounded font-medium hover:bg-red-600 transition-colors w-full">
+              <button
+                onClick={() => navigate('/checkout')}
+                className="bg-primary text-white px-10 py-3 rounded font-medium hover:bg-red-600 transition-colors w-full"
+              >
                 Proceed to checkout
               </button>
             </div>

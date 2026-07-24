@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Package, Heart, LogOut, Camera, Save, Eye, EyeOff } from 'lucide-react';
+import { User, Package, Heart, LogOut, Camera, Save, Eye, EyeOff, ChevronDown, ChevronUp, Clock, Truck, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useOrders } from '../context/OrderContext';
 
 const TABS = [
   { id: 'profile', label: 'My Profile', icon: User },
@@ -9,8 +10,107 @@ const TABS = [
   { id: 'wishlist', label: 'My Wishlist', icon: Heart },
 ];
 
+/* ─── Status Badge ─── */
+const StatusBadge = ({ status }) => {
+  const styles = {
+    Processing: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    Shipped: 'bg-blue-100 text-blue-700 border-blue-200',
+    Delivered: 'bg-green-100 text-green-700 border-green-200',
+  };
+  const icons = {
+    Processing: <Clock size={12} />,
+    Shipped: <Truck size={12} />,
+    Delivered: <CheckCircle size={12} />,
+  };
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${styles[status] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+      {icons[status]}
+      {status}
+    </span>
+  );
+};
+
+/* ─── Order Card ─── */
+const OrderCard = ({ order }) => {
+  const [expanded, setExpanded] = useState(false);
+  const orderDate = new Date(order.date).toLocaleDateString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric',
+  });
+  const itemCount = order.items.reduce((sum, i) => sum + i.quantity, 0);
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+      {/* Order Header */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 text-left hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Package size={20} className="text-gray-500" />
+          </div>
+          <div>
+            <p className="font-mono text-sm font-bold text-gray-900">{order.id}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{orderDate} · {itemCount} item{itemCount !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <StatusBadge status={order.status} />
+          <span className="font-bold text-gray-900">${order.total.toFixed(2)}</span>
+          {expanded ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+        </div>
+      </button>
+
+      {/* Expanded Details */}
+      {expanded && (
+        <div className="border-t border-gray-100 p-5">
+          {/* Items */}
+          <div className="space-y-3 mb-5">
+            {order.items.map(item => (
+              <div key={item.id} className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center flex-shrink-0 p-1">
+                  <img src={item.image} alt={item.title} className="max-h-full max-w-full object-contain mix-blend-multiply" />
+                </div>
+                <div className="flex-grow min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                  <p className="text-xs text-gray-500 capitalize">{item.category} · Qty: {item.quantity}</p>
+                </div>
+                <span className="text-sm font-semibold text-gray-900 flex-shrink-0">
+                  ${(item.price * item.quantity).toFixed(2)}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Shipping Info */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg text-sm">
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Shipping To</p>
+              <p className="font-medium text-gray-900">{order.shippingInfo.name}</p>
+              <p className="text-gray-600 text-xs mt-0.5">
+                {order.shippingInfo.address}, {order.shippingInfo.city}, {order.shippingInfo.state} {order.shippingInfo.zipCode}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Payment</p>
+              <p className="font-medium text-gray-900 capitalize">
+                {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Credit/Debit Card'}
+              </p>
+              <div className="flex justify-between mt-2 text-xs text-gray-600">
+                <span>Subtotal: ${order.subtotal.toFixed(2)}</span>
+                <span>Shipping: {order.shipping === 0 ? 'FREE' : `$${order.shipping.toFixed(2)}`}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Account = () => {
   const { user, logout, updateProfile } = useAuth();
+  const { orders } = useOrders();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
 
@@ -104,6 +204,11 @@ const Account = () => {
                 >
                   <tab.icon size={18} />
                   {tab.label}
+                  {tab.id === 'orders' && orders.length > 0 && (
+                    <span className="ml-auto bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                      {orders.length}
+                    </span>
+                  )}
                 </button>
               ))}
               <button
@@ -198,14 +303,22 @@ const Account = () => {
             {activeTab === 'orders' && (
               <div>
                 <h2 className="text-xl font-medium mb-8">My Orders</h2>
-                <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-                  <Package size={64} strokeWidth={1} className="mb-6" />
-                  <p className="text-lg font-medium text-gray-500">No orders yet</p>
-                  <p className="text-sm mt-2 mb-6">You haven't placed any orders.</p>
-                  <Link to="/products" className="bg-primary text-white px-8 py-3 rounded hover:bg-red-600 transition-colors text-sm font-medium">
-                    Start Shopping
-                  </Link>
-                </div>
+                {orders.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                    <Package size={64} strokeWidth={1} className="mb-6" />
+                    <p className="text-lg font-medium text-gray-500">No orders yet</p>
+                    <p className="text-sm mt-2 mb-6">You haven't placed any orders.</p>
+                    <Link to="/products" className="bg-primary text-white px-8 py-3 rounded hover:bg-red-600 transition-colors text-sm font-medium">
+                      Start Shopping
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.map(order => (
+                      <OrderCard key={order.id} order={order} />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

@@ -1,12 +1,23 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, Heart, ShoppingCart, User } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import SignUp from '../pages/SignUp';
-import { useNavigate } from "react-router-dom";
+import { useAuth } from '../context/AuthContext';
+
 const Navbar = () => {
   const { cartCount } = useCart();
- const navigate = useNavigate();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
+      setSearchTerm('');
+    }
+  };
+
   return (
     <header className="w-full">
       {/* Top Banner */}
@@ -40,23 +51,29 @@ const Navbar = () => {
               <Link to="/" className="text-black font-medium hover:underline underline-offset-4">Home</Link>
               <Link to="/contact" className="text-black font-medium hover:underline underline-offset-4">Contact</Link>
               <Link to="/about" className="text-black font-medium hover:underline underline-offset-4">About</Link>
-              <Link to="/signup" className="text-black font-medium hover:underline underline-offset-4">Sign Up</Link>
+              {!user ? (
+                <Link to="/signup" className="text-black font-medium hover:underline underline-offset-4">Sign Up</Link>
+              ) : (
+                <Link to="/account" className="text-black font-medium hover:underline underline-offset-4">My Account</Link>
+              )}
             </div>
 
             {/* Search & Icons */}
             <div className="flex items-center gap-4">
               
               {/* Search Bar */}
-              <div className="hidden sm:flex relative items-center">
+              <form onSubmit={handleSearch} className="hidden sm:flex relative items-center">
                 <input 
                   type="text" 
                   placeholder="What are you looking for?" 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="bg-[#F5F5F5] rounded-md py-2 pl-4 pr-10 text-sm focus:outline-none w-64"
                 />
-                <button className="absolute right-3 text-black">
+                <button type="submit" className="absolute right-3 text-black hover:text-primary transition-colors">
                   <Search size={18} />
                 </button>
-              </div>
+              </form>
 
               {/* Icons */}
               <div className="flex items-center gap-4 ml-2">
@@ -73,17 +90,19 @@ const Navbar = () => {
                   )}
                 </Link>
 
-                {/* ===============================================User icon for signup */}
-
+                {/* User icon */}
                 <div className="relative group hidden sm:block">
                   <button
-                    onClick={() => navigate("/signup")}
-                    className="text-black hover:text-primary transition-colors flex items-center justify-center bg-transparent group-hover:bg-primary group-hover:text-white rounded-full p-1"
+                    onClick={() => navigate(user ? "/account" : "/signup")}
+                    className={`transition-colors flex items-center justify-center rounded-full p-1 ${
+                      user
+                        ? 'bg-primary text-white hover:bg-red-600'
+                        : 'text-black hover:text-primary bg-transparent group-hover:bg-primary group-hover:text-white'
+                    }`}
                   >
                     <User size={24} />
                   </button>
                 </div>
-                {/* ========================================= */}
               </div>
             </div>
 

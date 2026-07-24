@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { fetchAllProducts } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { Heart, Truck, RotateCcw } from 'lucide-react';
@@ -10,6 +10,10 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
+  const navigate = useNavigate();
+
+  const [selectedSize, setSelectedSize] = useState('M');
+  const [selectedColor, setSelectedColor] = useState('red');
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -96,19 +100,36 @@ const ProductDetail = () => {
               {/* Colors */}
               <div className="flex items-center gap-4">
                 <span className="text-xl mr-2">Colours:</span>
-                <div className="w-5 h-5 rounded-full bg-red-400 border-2 border-white ring-2 ring-black cursor-pointer"></div>
-                <div className="w-5 h-5 rounded-full bg-blue-400 cursor-pointer"></div>
+                <button 
+                  onClick={() => setSelectedColor('red')}
+                  className={`w-6 h-6 rounded-full bg-red-500 border-2 cursor-pointer transition-transform ${selectedColor === 'red' ? 'border-black scale-110' : 'border-transparent'}`}
+                ></button>
+                <button 
+                  onClick={() => setSelectedColor('blue')}
+                  className={`w-6 h-6 rounded-full bg-blue-500 border-2 cursor-pointer transition-transform ${selectedColor === 'blue' ? 'border-black scale-110' : 'border-transparent'}`}
+                ></button>
               </div>
 
               {/* Sizes */}
               <div className="flex items-center gap-4">
                 <span className="text-xl mr-2">Size:</span>
                 <div className="flex gap-4">
-                  {['XS', 'S', 'M', 'L', 'XL'].map(size => (
-                    <button key={size} className="w-8 h-8 rounded border border-gray-300 flex items-center justify-center text-sm font-medium hover:bg-primary hover:text-white hover:border-primary transition-colors">
-                      {size}
-                    </button>
-                  ))}
+                  {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => {
+                    const isActive = selectedSize === size;
+                    return (
+                      <button 
+                        key={size} 
+                        onClick={() => setSelectedSize(size)}
+                        className={`w-10 h-10 rounded border text-sm font-medium transition-colors ${
+                          isActive 
+                            ? 'bg-primary text-white border-primary' 
+                            : 'border-gray-300 text-gray-700 hover:border-primary hover:text-primary'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -130,7 +151,7 @@ const ProductDetail = () => {
 
               {/* Buy Button */}
               <button 
-                onClick={() => addToCart(product, quantity)}
+                onClick={() => { addToCart(product, quantity, selectedSize, selectedColor); navigate('/checkout'); }}
                 className="bg-primary text-white px-10 h-11 rounded font-medium hover:bg-red-600 transition-colors"
               >
                 Buy Now

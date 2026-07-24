@@ -16,29 +16,39 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('ecommerce_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (product, quantity = 1) => {
+  const addToCart = (product, quantity = 1, selectedSize = undefined, selectedColor = undefined) => {
     setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === product.id);
+      const existingItem = prevItems.find(item => 
+        item.id === product.id && 
+        item.selectedSize === selectedSize && 
+        item.selectedColor === selectedColor
+      );
       if (existingItem) {
         return prevItems.map(item =>
-          item.id === product.id
+          item.id === product.id && 
+          item.selectedSize === selectedSize && 
+          item.selectedColor === selectedColor
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prevItems, { ...product, quantity }];
+      return [...prevItems, { ...product, quantity, selectedSize, selectedColor }];
     });
   };
 
-  const removeFromCart = (productId) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+  const removeFromCart = (productId, selectedSize, selectedColor) => {
+    setCartItems(prevItems => prevItems.filter(item => 
+      !(item.id === productId && item.selectedSize === selectedSize && item.selectedColor === selectedColor)
+    ));
   };
 
-  const updateQuantity = (productId, newQuantity) => {
+  const updateQuantity = (productId, newQuantity, selectedSize, selectedColor) => {
     if (newQuantity < 1) return;
     setCartItems(prevItems =>
       prevItems.map(item =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
+        item.id === productId && item.selectedSize === selectedSize && item.selectedColor === selectedColor
+          ? { ...item, quantity: newQuantity }
+          : item
       )
     );
   };

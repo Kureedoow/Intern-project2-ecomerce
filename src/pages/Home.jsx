@@ -244,22 +244,23 @@ const Home = () => {
         </div>
         <CardSlider itemWidth={170}>
           {[
-            { name: 'Phones', icon: '📱' },
-            { name: 'Computers', icon: '💻' },
-            { name: 'SmartWatch', icon: '⌚' },
-            { name: 'Camera', icon: '📷' },
-            { name: 'HeadPhones', icon: '🎧' },
-            { name: 'Gaming', icon: '🎮' },
-            { name: 'Accessories', icon: '🔌' },
-            { name: 'Tablets', icon: '📟' },
+            { name: 'Phones', icon: '📱', keyword: 'smartphones' },
+            { name: 'Computers', icon: '💻', keyword: 'laptops' },
+            { name: 'SmartWatch', icon: '⌚', keyword: 'watches' },
+            { name: 'Camera', icon: '📷', keyword: 'camera' },
+            { name: 'HeadPhones', icon: '🎧', keyword: 'headphones' },
+            { name: 'Gaming', icon: '🎮', keyword: 'gaming' },
+            { name: 'Accessories', icon: '🔌', keyword: 'accessories' },
+            { name: 'Tablets', icon: '📟', keyword: 'tablets' },
           ].map((cat) => (
-            <div
+            <Link
               key={cat.name}
+              to={`/products?category=${encodeURIComponent(cat.keyword)}`}
               className="border border-gray-300 rounded flex flex-col items-center justify-center py-8 gap-3 cursor-pointer hover:bg-primary hover:text-white hover:border-primary transition-all duration-200 select-none"
             >
               <span className="text-4xl">{cat.icon}</span>
               <span className="font-medium text-sm">{cat.name}</span>
-            </div>
+            </Link>
           ))}
         </CardSlider>
       </section>
